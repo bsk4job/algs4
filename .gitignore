@@ -4,7 +4,8 @@
 .mtj.tmp/
 
 # Package Files #
-# *.jar
+*.jar
+!packages/*.jar
 *.war
 *.ear
 
@@ -14,4 +15,6 @@ hs_err_pid*
 # IntelliJ idea files
 */out/*
 */.idea/workspace.xml
+
+# Test cases
 
