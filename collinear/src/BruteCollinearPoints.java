@@ -1,4 +1,5 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdDraw;
@@ -11,8 +12,11 @@ import edu.princeton.cs.algs4.In;
  */
 public class BruteCollinearPoints {
 
+    // the line segments
+    private ArrayList<LineSegmentInfo> lineSegments;
+
     // finds all line segments containing 4 points
-    public BruteCollinearPoints (Point[] points) {
+    public BruteCollinearPoints(Point[] points) {
         // corner cases : checking for nulls and duplicates
         if (points == null) {
             throw new NullPointerException();
@@ -40,11 +44,6 @@ public class BruteCollinearPoints {
         Point p, q, r, s;
 
         lineSegments = new ArrayList<>();
-        int[] links = new int[points.length];
-        for (int i = 0; i < links.length; i++) {
-            links[i] = i;
-        }
-
 
         // looking for the collinear segments
         for (int i1 = 0; i1 < points.length - 3; i1++) {
@@ -58,7 +57,7 @@ public class BruteCollinearPoints {
                     r = points[i3];
                     double slopeToR = p.slopeTo(r);
 
-                    if (slopeToQ != slopeToR) continue;
+                    if (Double.compare(slopeToQ, slopeToR) != 0) continue;
 
                     int maxPointIndex = 0;
                     for (int i4 = i3 + 1; i4 < points.length; i4++) {
@@ -67,46 +66,76 @@ public class BruteCollinearPoints {
                         double slopeToS = p.slopeTo(s);
 
                         // saving the last collinear point
-                        if (slopeToQ == slopeToS
-                                && links[i1] != links[i2] && links[i2] != links[i3]
-                                ) {
-                            links[i4] = i1;
+                        if (Double.compare(slopeToQ, slopeToS) == 0) {
                             maxPointIndex = i4;
                         }
 
                         if (i4 == points.length - 1 && maxPointIndex > 0) {
 
-                            links[i1] = i1;
-                            links[i2] = i1;
-                            links[i3] = i1;
-                            links[i4] = i1;
-                            LineSegment seg = new LineSegment(p, points[maxPointIndex]);
-                            lineSegments.add(seg);
+                            boolean isDuplicate = false;
+                            for (LineSegmentInfo ls : lineSegments) {
+
+                                if (Double.compare(ls.getSlope(), slopeToQ) == 0
+                                        && (ls.getA().compareTo(p) == 0
+                                            || ls.getB().compareTo(points[maxPointIndex]) == 0)) {
+                                    isDuplicate = true;
+                                    break;
+                                }
+                            }
+
+                            if (!isDuplicate) {
+                                lineSegments.add(new LineSegmentInfo(p, points[maxPointIndex]));
+                            }
                         }
                     }
                 }
             }
         }
+    }
 
+    /**
+     * LineSegment with information about its start, end and slope
+     */
+    private class LineSegmentInfo {
+        private Point a, b;
+        private double slope;
+
+        public LineSegmentInfo(Point a, Point b) {
+            this.a = a;
+            this.b = b;
+            this.slope = a.slopeTo(b);
+        }
+
+        public Point getA() {
+            return this.a;
+        }
+
+        public Point getB() {
+            return this.b;
+        }
+
+        public double getSlope() {
+            return this.slope;
+        }
     }
 
     // the number of line segments
     public int numberOfSegments() {
-        return segments().length;
+        return lineSegments.size();
     }
 
-    // the line segments
-    private List<LineSegment> lineSegments;
-    private LineSegment[] _segments;
     public LineSegment[] segments() {
-        if (_segments == null) {
-            _segments = new LineSegment[lineSegments.size()];
-            lineSegments.toArray(_segments);
+
+        LineSegment[] segmentsArray = new LineSegment[lineSegments.size()];
+        int i = 0;
+        for (LineSegmentInfo ls : lineSegments) {
+            segmentsArray[i++] = new LineSegment(ls.getA(), ls.getB());
         }
-        return _segments;
+
+        return segmentsArray;
     }
 
-    public static void main (String[] args) {
+    public static void main(String[] args) {
 
         // read the n points from a file
         In in = new In(args[0]);
