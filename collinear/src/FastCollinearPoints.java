@@ -1,22 +1,21 @@
+/**
+ * A faster, sorting-based solution fpr the "collinear points" problem
+ */
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdOut;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-// algs4 
-import edu.princeton.cs.algs4.StdOut;
-import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.In;
 
-/**
- * Examines 4 points at a time and checks whether they all lie on the same line segment,
- * returning all such line segments. To check whether the 4 points p, q, r, and s are collinear,
- * check whether the three slopes between p and q, between p and r, and between p and s are all equal.
- */
-public class BruteCollinearPoints {
+
+public class FastCollinearPoints {
 
     // the line segments
     private ArrayList<LineSegmentInfo> lineSegments;
 
-    // finds all line segments containing 4 points
-    public BruteCollinearPoints(Point[] points) {
+    // finds all line segments containing 4 or more points
+    public FastCollinearPoints(Point[] points) {
         // corner cases : checking for nulls and duplicates
         if (points == null) {
             throw new NullPointerException();
@@ -41,55 +40,74 @@ public class BruteCollinearPoints {
         }
 
         Arrays.sort(points);
-        Point p, q, r, s;
-
         lineSegments = new ArrayList<>();
 
-        // looking for the collinear segments
-        for (int i1 = 0; i1 < points.length - 3; i1++) {
-            p = points[i1];
+        for (Point p: points) {
 
-            for (int i2 = i1 + 1; i2 < points.length - 2; i2++) {
-                q = points[i2];
-                double slopeToQ = p.slopeTo(q);
+            Point[] sortedPoints = points.clone();
+            Arrays.sort(sortedPoints, p.slopeOrder());
+            Point q = sortedPoints[1];
+            ArrayList<Point> segment = new ArrayList<>(4);
+            segment.add(p);
+            segment.add(q);
 
-                for (int i3 = i2 + 1; i3 < points.length - 1; i3++) {
-                    r = points[i3];
-                    double slopeToR = p.slopeTo(r);
+            double slopeQ = p.slopeTo(q);
+            for (int i = 2; i < sortedPoints.length; i++) {
 
-                    if (Double.compare(slopeToQ, slopeToR) != 0) continue;
+                double slopeCurrent = p.slopeTo(sortedPoints[i]);
 
-                    int maxPointIndex = 0;
-                    for (int i4 = i3 + 1; i4 < points.length; i4++) {
+                if (Double.compare(slopeQ, slopeCurrent) == 0) {
+                    segment.add(sortedPoints[i]);
+                }
+                else {
+                    checkAddNewSegment(segment);
 
-                        s = points[i4];
-                        double slopeToS = p.slopeTo(s);
-
-                        // saving the last collinear point
-                        if (Double.compare(slopeToQ, slopeToS) == 0) {
-                            maxPointIndex = i4;
-                        }
-
-                        if (i4 == points.length - 1 && maxPointIndex > 0) {
-
-                            boolean isDuplicate = false;
-                            for (LineSegmentInfo ls : lineSegments) {
-
-                                if (Double.compare(ls.getSlope(), slopeToQ) == 0
-                                        && (ls.getA().compareTo(p) == 0
-                                            || ls.getB().compareTo(points[maxPointIndex]) == 0)) {
-                                    isDuplicate = true;
-                                    break;
-                                }
-                            }
-
-                            if (!isDuplicate) {
-                                lineSegments.add(new LineSegmentInfo(p, points[maxPointIndex]));
-                            }
-                        }
-                    }
+                    q = sortedPoints[i];
+                    segment = initNewSegment(p, q);
+                    slopeQ = slopeCurrent;
                 }
             }
+
+            checkAddNewSegment(segment);
+        }
+
+    }
+
+    private ArrayList<Point> initNewSegment(Point p, Point q) {
+        ArrayList<Point> result = new ArrayList<>(4);
+        result.add(p);
+        result.add(q);
+
+        return result;
+    }
+
+    private void checkAddNewSegment(ArrayList<Point> segment) {
+
+        if (segment.size() < 4) {
+            return;
+        }
+
+        Point[] points = new Point[segment.size()];
+        segment.toArray(points);
+        Arrays.sort(points);
+
+        Point p = points[0];
+        Point q = points[segment.size() - 1];
+
+        double slopeToQ = p.slopeTo(q);
+        boolean isDuplicate = false;
+        for (LineSegmentInfo ls : lineSegments) {
+
+            if (Double.compare(ls.getSlope(), slopeToQ) == 0
+                    && (ls.getA().compareTo(p) == 0
+                    || ls.getB().compareTo(q) == 0)) {
+                isDuplicate = true;
+                break;
+            }
+        }
+
+        if (!isDuplicate) {
+            lineSegments.add(new LineSegmentInfo(p, q));
         }
     }
 
@@ -134,7 +152,6 @@ public class BruteCollinearPoints {
 
         return segmentsArray;
     }
-
     public static void main(String[] args) {
 
         // read the n points from a file
@@ -157,8 +174,7 @@ public class BruteCollinearPoints {
         StdDraw.show();
 
         // print and draw the line segments
-        BruteCollinearPoints collinear = new BruteCollinearPoints(points);
-
+        FastCollinearPoints collinear = new FastCollinearPoints(points);
         for (LineSegment segment : collinear.segments()) {
             StdOut.println(segment);
             segment.draw();
