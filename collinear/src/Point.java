@@ -60,7 +60,7 @@ public class Point implements Comparable<Point> {
      */
     public double slopeTo(Point that) {
         /* YOUR CODE HERE */
-        //Double.NEGATIVE_INFINITY if (x0, y0) and (x1, y1) are equal.
+        // Double.NEGATIVE_INFINITY if (x0, y0) and (x1, y1) are equal.
         if (this.compareTo(that) == 0) return Double.NEGATIVE_INFINITY;
         // Double.POSITIVE_INFINITY if the line segment is vertical;
         if (this.x == that.x) return Double.POSITIVE_INFINITY;

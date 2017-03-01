@@ -13,6 +13,8 @@ public class FastCollinearPoints {
 
     // the line segments
     private ArrayList<LineSegmentInfo> lineSegments;
+    private LineSegment[] segmentsArray;
+    private Point[] pointsArray;
 
     // finds all line segments containing 4 or more points
     public FastCollinearPoints(Point[] points) {
@@ -39,12 +41,15 @@ public class FastCollinearPoints {
             }
         }
 
-        Arrays.sort(points);
         lineSegments = new ArrayList<>();
+        if (points.length < 4) return;
 
-        for (Point p: points) {
+        pointsArray = points.clone();
+        Arrays.sort(pointsArray);
 
-            Point[] sortedPoints = points.clone();
+        for (Point p: pointsArray) {
+
+            Point[] sortedPoints = pointsArray.clone();
             Arrays.sort(sortedPoints, p.slopeOrder());
             Point q = sortedPoints[1];
             ArrayList<Point> segment = new ArrayList<>(4);
@@ -144,14 +149,17 @@ public class FastCollinearPoints {
 
     public LineSegment[] segments() {
 
-        LineSegment[] segmentsArray = new LineSegment[lineSegments.size()];
-        int i = 0;
-        for (LineSegmentInfo ls : lineSegments) {
-            segmentsArray[i++] = new LineSegment(ls.getA(), ls.getB());
+        if (segmentsArray == null) {
+            segmentsArray = new LineSegment[lineSegments.size()];
+            int i = 0;
+            for (LineSegmentInfo ls : lineSegments) {
+                segmentsArray[i++] = new LineSegment(ls.getA(), ls.getB());
+            }
         }
 
-        return segmentsArray;
+        return segmentsArray.clone();
     }
+
     public static void main(String[] args) {
 
         // read the n points from a file
