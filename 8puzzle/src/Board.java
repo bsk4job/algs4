@@ -12,8 +12,12 @@ public class Board {
     public Board(int[][] blocks) {
         if (blocks == null) throw new java.lang.NullPointerException();
 
-        this.tiles = blocks.clone();
-        this.n = tiles[0].length;
+        this.n = blocks.length;
+
+        this.tiles = new int[n][n];
+        for (int i = 0; i < n; i++) {
+            this.tiles[i] = blocks[i].clone();
+        }
     }
 
     // board dimension n
@@ -55,22 +59,31 @@ public class Board {
         return result;
     }
 
+    // cache for manhattan
+    private int sumManhattanDistance = -1;
+
     // sum of Manhattan distances between blocks and goal
     public int manhattan() {
-        int result = 0;
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                int val = tiles[i][j];
+        // calculating for the first time
+        if (sumManhattanDistance < 0) {
+            int result = 0;
 
-                if (val == 0) continue;
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    int val = tiles[i][j];
 
-                int row = getCorrectRow(val), col = getCorrectColumn(val);
-                result += Math.abs(row - i) + Math.abs(col - j);
+                    if (val == 0) continue;
+
+                    int row = getCorrectRow(val), col = getCorrectColumn(val);
+                    result += Math.abs(row - i) + Math.abs(col - j);
+                }
             }
+
+            sumManhattanDistance = result;
         }
 
-        return result;
+        return sumManhattanDistance;
     }
 
     // is this board the goal board?
@@ -192,9 +205,9 @@ public class Board {
 
         System.out.println(testBoard.toString());
 
-        System.out.println("dimension: " + testBoard.dimension());
-        System.out.println("hamming: " + testBoard.hamming());
-        System.out.println("manhattan: " + testBoard.manhattan());
+        System.out.println("dimension (3): " + testBoard.dimension());
+        System.out.println("hamming (5): " + testBoard.hamming());
+        System.out.println("manhattan (10): " + testBoard.manhattan());
         System.out.println("isGoal (false): " + testBoard.isGoal());
         System.out.println("isGoal (true): " + goalBoard.isGoal());
 
