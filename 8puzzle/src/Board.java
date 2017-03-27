@@ -4,8 +4,11 @@ import edu.princeton.cs.algs4.Queue;
  * Puzzle's board
  */
 public class Board {
-    private int[][] tiles;
+    // 1d array for the board to save the memory
+    private char[] tiles;
     private int n = 0;
+    // cache for manhattan
+    private int sumManhattanDistance = -1;
 
     // construct a board from an n-by-n array of blocks
     // (where blocks[i][j] = block in row i, column j)
@@ -14,10 +17,25 @@ public class Board {
 
         this.n = blocks.length;
 
-        this.tiles = new int[n][n];
+        this.tiles = new char[n * n];
         for (int i = 0; i < n; i++) {
-            this.tiles[i] = blocks[i].clone();
+            for (int j = 0; j < n; j++) {
+                setBlock(i, j, blocks[i][j]);
+            }
         }
+    }
+
+    private int getBlockIndex(int i, int j) {
+        return i * n + j;
+    }
+
+
+    private int getBlock(int i, int j) {
+        return (int) tiles[getBlockIndex(i, j)];
+    }
+
+    private void setBlock(int i, int j, int val) {
+        tiles[getBlockIndex(i, j)] = (char) val;
     }
 
     // board dimension n
@@ -45,7 +63,7 @@ public class Board {
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                int val = tiles[i][j];
+                int val = getBlock(i, j);
 
                 if (val == 0) continue;
 
@@ -59,9 +77,6 @@ public class Board {
         return result;
     }
 
-    // cache for manhattan
-    private int sumManhattanDistance = -1;
-
     // sum of Manhattan distances between blocks and goal
     public int manhattan() {
 
@@ -71,7 +86,7 @@ public class Board {
 
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    int val = tiles[i][j];
+                    int val = getBlock(i, j);
 
                     if (val == 0) continue;
 
@@ -91,7 +106,7 @@ public class Board {
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                int val = tiles[i][j];
+                int val = getBlock(i, j);
                 if (getCorrectRow(val) != i
                         || getCorrectColumn(val) != j) {
                     return false;
@@ -107,7 +122,9 @@ public class Board {
         int[][] result = new int[n][n];
 
         for (int i = 0; i < n; i++) {
-            result[i] = tiles[i].clone();
+            for (int j = 0; j < n; j++) {
+                result[i][j] = getBlock(i, j);
+            }
         }
 
         // swapping two tiles
@@ -120,8 +137,13 @@ public class Board {
 
     // a board that is obtained by exchanging any pair of blocks
     public Board twin() {
-        // swapping the first two tiles
-        int[][] twinTiles = this.swap(0, 0, 0, 1);
+        // swapping the first two non-empty blocks
+        int i = 0, j1 = 0, j2 = 1;
+        if (getBlock(i, j1) == 0 || getBlock(i, j2) == 0) {
+            i++;
+        }
+
+        int[][] twinTiles = this.swap(i, j1, i, j2);
 
         return new Board(twinTiles);
     }
@@ -132,7 +154,7 @@ public class Board {
         s.append(n + "\n");
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                s.append(String.format("%2d ", tiles[i][j]));
+                s.append(String.format("%2d ", getBlock(i, j)));
             }
             s.append("\n");
         }
@@ -148,7 +170,11 @@ public class Board {
 
         if (this.dimension() != that.dimension()) return false;
 
-        return (this.toString().equals(that.toString()));
+        for (int i = 0; i < n * n; i++) {
+            if (this.tiles[i] != that.tiles[i]) return false;
+        }
+
+        return true;
     }
 
     // all neighboring boards
@@ -162,7 +188,7 @@ public class Board {
             if (zeroRow > 0 && zeroCol > 0) break;
 
             for (int j = 0; j < n; j++) {
-                if (tiles[i][j] == 0) {
+                if (getBlock(i, j) == 0) {
                     zeroRow = i;
                     zeroCol = j;
                     break;
@@ -199,6 +225,8 @@ public class Board {
     public static void main(String[] args) {
         int[][] testTiles = new int[][] { {8, 1, 3}, {4, 0, 2}, {7, 6, 5} };
         int[][] testGoalTiles = new int[][] { {1, 2, 3}, {4, 5, 6}, {7, 8, 0} };
+
+        // int[][] testTiles = new int[][] { {1, 0}, {3, 2} };
 
         Board testBoard = new Board(testTiles);
         Board goalBoard = new Board(testGoalTiles);
